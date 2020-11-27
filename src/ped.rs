@@ -1,5 +1,5 @@
-use secp256k1::group::Gej;
-use secp256k1::scalar::Scalar;
+use secp256k1_ge::group::Gej;
+use secp256k1_ge::scalar::Scalar;
 
 pub fn ped_commit(h: &Gej, value: &Scalar, decommitment: &Scalar) -> Gej {
     let mut commitment = Gej::default();

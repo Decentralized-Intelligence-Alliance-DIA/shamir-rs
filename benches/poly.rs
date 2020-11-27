@@ -2,7 +2,7 @@
 
 extern crate test;
 
-use secp256k1::scalar::{self, Scalar};
+use secp256k1_ge::scalar::{self, Scalar};
 use shamir::rs::poly::{self, Poly};
 use test::Bencher;
 

@@ -1,4 +1,4 @@
-use secp256k1::scalar::Scalar;
+use secp256k1_ge::scalar::Scalar;
 use std::cmp;
 
 pub mod poly;
@@ -96,7 +96,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use secp256k1::scalar;
+    use secp256k1_ge::scalar;
 
     #[test]
     fn decoding_with_errors() {

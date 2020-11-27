@@ -1,5 +1,5 @@
 use crate::vss::SharingCommitment;
-use secp256k1::group::Gej;
+use secp256k1_ge::group::Gej;
 
 pub fn random_commitment_using_thread_rng(k: usize) -> SharingCommitment {
     let mut commitment = SharingCommitment::with_capacity(k);

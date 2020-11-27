@@ -1,37 +1,7 @@
+use std::str::FromStr;
 use crate::rs::poly;
-use secp256k1::scalar::Scalar;
-
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
-pub struct Share {
-    pub index: Scalar,
-    pub value: Scalar,
-}
-
-impl Share {
-    pub fn add(&mut self, a: &Share, b: &Share) {
-        if a.index != b.index {
-            panic!("cannot add shares with different indices")
-        }
-        self.index = a.index;
-        self.value.add_mut(&a.value, &b.value);
-    }
-
-    pub fn add_assign(&mut self, a: &Share) {
-        if self.index != a.index {
-            panic!("cannot add shares with different indices")
-        }
-        self.value.add_assign_mut(&a.value);
-    }
-
-    pub fn scale(&mut self, share: &Share, scalar: &Scalar) {
-        self.index = share.index;
-        self.value.mul_mut(&share.value, scalar);
-    }
-
-    pub fn scale_assign(&mut self, scalar: &Scalar) {
-        self.value.mul_assign_mut(scalar);
-    }
-}
+use crate::share::{ Share };
+use secp256k1_ge::scalar::Scalar;
 
 pub fn share_secret(indices: &[Scalar], secret: &Scalar, k: usize) -> Vec<Share> {
     let mut shares = Vec::with_capacity(indices.len());
@@ -106,12 +76,13 @@ where
     let mut numerator = Scalar::default();
     let mut denominator = Scalar::default();
     let mut tmp = Scalar::default();
+    let indeces = shares.clone().map(|Share { index, .. }| index);
     dst.clear();
     for Share { index: i, value } in shares.clone() {
         eval_lagrange_basis_at_zero_in_place(
             &mut tmp,
             i,
-            shares.clone().map(|Share { index, .. }| index),
+            indeces.clone(),
             &mut numerator,
             &mut denominator,
         );
@@ -119,6 +90,8 @@ where
         dst.add_assign_mut(&tmp);
     }
 }
+
+
 
 pub(crate) fn eval_lagrange_basis_at_zero_in_place<'a, I>(
     eval: &mut Scalar,
@@ -154,10 +127,19 @@ pub fn shares_are_k_consistent_with_secret(shares: &[Share], secret: &Scalar, k:
     if shares.len() < k {
         panic!("not enough shares for given threshold")
     }
-    if shares.len() == k {
-        return true;
-    }
+    
     let mut reconstructed_secret = Scalar::default();
+
+    if shares.len() == k {
+        
+        interpolate_shares_at_zero_in_place(&mut reconstructed_secret, shares.iter());
+        if reconstructed_secret != *secret {
+            return false;
+        }
+
+    }
+
+    
     for i in 0..(shares.len() - k) {
         interpolate_shares_at_zero_in_place(&mut reconstructed_secret, shares[i..i + k].iter());
         if reconstructed_secret != *secret {
@@ -170,7 +152,7 @@ pub fn shares_are_k_consistent_with_secret(shares: &[Share], secret: &Scalar, k:
 #[cfg(test)]
 mod tests {
     use super::*;
-    use secp256k1::scalar;
+    use secp256k1_ge::scalar;
 
     #[test]
     fn poly_eval_at_zero() {
@@ -239,6 +221,7 @@ mod tests {
         assert_eq!(reconstructed, secret);
     }
 
+
     #[test]
     fn sss_shares_are_k_consistent() {
         let mut indices = [Scalar::default(); 10];
@@ -247,8 +230,11 @@ mod tests {
 
         let secret = Scalar::new_random_using_thread_rng();
         let shares = share_secret(&indices, &secret, k);
+        
         assert!(shares_are_k_consistent(&shares, k));
     }
+
+
 
     #[test]
     fn sss_share_addition() {
@@ -273,6 +259,7 @@ mod tests {
             k
         ))
     }
+
 
     #[test]
     fn sss_share_scaling() {

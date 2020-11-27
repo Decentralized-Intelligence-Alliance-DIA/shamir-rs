@@ -1,4 +1,4 @@
-use secp256k1::scalar::Scalar;
+use secp256k1_ge::scalar::Scalar;
 use std::cmp;
 use std::ops::{Index, IndexMut};
 
@@ -400,7 +400,7 @@ impl EEAState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use secp256k1::scalar;
+    use secp256k1_ge::scalar;
 
     #[test]
     fn multiplication_and_division_are_inverses() {

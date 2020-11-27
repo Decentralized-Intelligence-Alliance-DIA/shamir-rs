@@ -1,10 +1,11 @@
-use secp256k1::group::Gej;
-use secp256k1::scalar::Scalar;
+use secp256k1_ge::group::Gej;
+use secp256k1_ge::scalar::Scalar;
 use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut};
 
 use crate::ped;
-use crate::sss::{self, Share};
+use crate::share::{Share};
+use crate::sss:: {self};
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
 pub struct VShare {
@@ -273,7 +274,7 @@ pub fn poly_eval_gej_slice_in_exponent_in_place(dst: &mut Gej, coeffs: &[Gej], p
 #[cfg(test)]
 mod tests {
     use super::*;
-    use secp256k1::{
+    use secp256k1_ge::{
         group::Gej,
         scalar::{self, Scalar},
     };
